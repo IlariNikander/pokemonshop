@@ -1,0 +1,355 @@
+<!doctype html>
+<html lang="fi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Luo yhdellä hakusanalla suorat Pokémon-korttihaut neljään verkkokauppaan.">
+  <title>Pokémon-korttihaku</title>
+  <style>
+    :root {
+      color-scheme: light dark;
+      --bg: #f5f7fb;
+      --card: #ffffff;
+      --text: #172033;
+      --muted: #64748b;
+      --border: #dbe3ef;
+      --accent: #3157d5;
+      --accent-hover: #2748b7;
+      --shadow: 0 16px 45px rgba(31, 46, 87, .11);
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #0d1320;
+        --card: #151d2c;
+        --text: #eef3ff;
+        --muted: #a7b3c8;
+        --border: #2a364b;
+        --accent: #7893ff;
+        --accent-hover: #94a9ff;
+        --shadow: 0 18px 55px rgba(0, 0, 0, .28);
+      }
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at top left, rgba(49, 87, 213, .13), transparent 33rem),
+        var(--bg);
+    }
+
+    main {
+      width: min(880px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 64px 0;
+    }
+
+    .panel {
+      padding: clamp(24px, 5vw, 48px);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      background: var(--card);
+      box-shadow: var(--shadow);
+    }
+
+    h1 {
+      margin: 0 0 10px;
+      font-size: clamp(2rem, 6vw, 3.5rem);
+      line-height: 1.05;
+      letter-spacing: -.04em;
+    }
+
+    .intro {
+      max-width: 650px;
+      margin: 0 0 30px;
+      color: var(--muted);
+      font-size: 1.05rem;
+      line-height: 1.6;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 9px;
+      font-weight: 700;
+    }
+
+    .search-row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+    }
+
+    input, button, a.store-link {
+      min-height: 52px;
+      border-radius: 13px;
+      font: inherit;
+    }
+
+    input {
+      width: 100%;
+      padding: 0 16px;
+      border: 1px solid var(--border);
+      color: var(--text);
+      background: transparent;
+      outline: none;
+    }
+
+    input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 18%, transparent);
+    }
+
+    button {
+      padding: 0 18px;
+      border: 0;
+      cursor: pointer;
+      font-weight: 750;
+    }
+
+    .primary {
+      color: white;
+      background: var(--accent);
+    }
+
+    .primary:hover { background: var(--accent-hover); }
+
+    .secondary {
+      color: var(--text);
+      border: 1px solid var(--border);
+      background: transparent;
+    }
+
+    .secondary:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    .results {
+      display: grid;
+      gap: 12px;
+      margin-top: 32px;
+    }
+
+    a.store-link {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      padding: 14px 17px;
+      border: 1px solid var(--border);
+      color: var(--text);
+      text-decoration: none;
+      transition: transform .15s ease, border-color .15s ease;
+    }
+
+    a.store-link:hover {
+      border-color: var(--accent);
+      transform: translateY(-1px);
+    }
+
+    .store-name { font-weight: 800; }
+
+    .store-url {
+      display: block;
+      max-width: 620px;
+      margin-top: 4px;
+      overflow: hidden;
+      color: var(--muted);
+      font-size: .82rem;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .arrow {
+      color: var(--accent);
+      font-size: 1.25rem;
+      font-weight: 900;
+    }
+
+    .hint, #status {
+      color: var(--muted);
+      font-size: .9rem;
+    }
+
+    .hint { margin: 14px 0 0; }
+    #status { min-height: 1.4em; margin-top: 12px; }
+
+    @media (max-width: 620px) {
+      main { padding: 28px 0; }
+      .search-row { grid-template-columns: 1fr; }
+      .search-row button { width: 100%; }
+      .store-url { max-width: 68vw; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <section class="panel">
+      <h1>Pokémon-korttihaku</h1>
+      <p class="intro">
+        Kirjoita kortin tunnus tai muu hakusana kerran. Alla olevat linkit päivittyvät automaattisesti neljään kauppaan.
+      </p>
+
+      <label for="query">Hakusana</label>
+      <div class="search-row">
+        <input
+          id="query"
+          type="search"
+          value="s10b 030"
+          placeholder="Esim. s10b 030"
+          autocomplete="off"
+          spellcheck="false"
+          autofocus
+        >
+        <button id="openAll" class="primary" type="button">Avaa kaikki</button>
+      </div>
+
+      <div class="actions">
+        <button id="copyAll" class="secondary" type="button">Kopioi linkit</button>
+        <button id="clear" class="secondary" type="button">Tyhjennä</button>
+      </div>
+
+      <p class="hint">Vinkki: yksittäisen kaupan voi avata suoraan sen riviltä.</p>
+      <div id="status" aria-live="polite"></div>
+
+      <div id="results" class="results"></div>
+    </section>
+  </main>
+
+  <script>
+    const shops = [
+      {
+        name: "Toreca Camp",
+        makeUrl: q => `https://torecacamp-pokemon.com/search?type=product&options%5Bprefix%5D=last&options%5Bunavailable_products%5D=last&q=${q}`
+      },
+      {
+        name: "Hareruya 2",
+        makeUrl: q => `https://www.hareruya2.com/search?type=product&q=${q}&options%5Bprefix%5D=last`
+      },
+      {
+        name: "Card Rush Pokémon",
+        makeUrl: q => `https://www.cardrush-pokemon.jp/phone/product-list?search_tmp=%E6%A4%9C%E7%B4%A2&keyword=${q}&Submit=%E6%A4%9C%E7%B4%A2`
+      },
+      {
+        name: "C-Labo Online",
+        makeUrl: q => `https://www.c-labo-online.jp/product-list?keyword=${q}&Submit=`
+      }
+    ];
+
+    const input = document.querySelector("#query");
+    const results = document.querySelector("#results");
+    const status = document.querySelector("#status");
+
+    function encodeQuery(value) {
+      return encodeURIComponent(value.trim()).replace(/%20/g, "+");
+    }
+
+    function currentLinks() {
+      const encoded = encodeQuery(input.value);
+      return shops.map(shop => ({
+        name: shop.name,
+        url: shop.makeUrl(encoded)
+      }));
+    }
+
+    function render() {
+      const links = currentLinks();
+      const hasQuery = input.value.trim().length > 0;
+
+      results.replaceChildren(...links.map(link => {
+        const anchor = document.createElement("a");
+        anchor.className = "store-link";
+        anchor.href = hasQuery ? link.url : "#";
+        anchor.target = "_blank";
+        anchor.rel = "noopener noreferrer";
+        anchor.setAttribute("aria-disabled", String(!hasQuery));
+
+        const text = document.createElement("span");
+        const name = document.createElement("span");
+        const url = document.createElement("span");
+        const arrow = document.createElement("span");
+
+        name.className = "store-name";
+        name.textContent = link.name;
+
+        url.className = "store-url";
+        url.textContent = hasQuery ? link.url : "Kirjoita ensin hakusana";
+
+        arrow.className = "arrow";
+        arrow.textContent = "↗";
+
+        text.append(name, url);
+        anchor.append(text, arrow);
+
+        if (!hasQuery) {
+          anchor.addEventListener("click", event => event.preventDefault());
+        }
+
+        return anchor;
+      }));
+
+      const pageUrl = new URL(window.location.href);
+      if (hasQuery) pageUrl.searchParams.set("q", input.value.trim());
+      else pageUrl.searchParams.delete("q");
+      history.replaceState(null, "", pageUrl);
+    }
+
+    input.addEventListener("input", render);
+
+    document.querySelector("#openAll").addEventListener("click", () => {
+      if (!input.value.trim()) {
+        status.textContent = "Kirjoita ensin hakusana.";
+        input.focus();
+        return;
+      }
+
+      status.textContent = "";
+      currentLinks().forEach(link => {
+        window.open(link.url, "_blank", "noopener,noreferrer");
+      });
+    });
+
+    document.querySelector("#copyAll").addEventListener("click", async () => {
+      if (!input.value.trim()) {
+        status.textContent = "Kirjoita ensin hakusana.";
+        input.focus();
+        return;
+      }
+
+      const text = currentLinks()
+        .map(link => `${link.name}: ${link.url}`)
+        .join("\n");
+
+      try {
+        await navigator.clipboard.writeText(text);
+        status.textContent = "Linkit kopioitu leikepöydälle.";
+      } catch {
+        status.textContent = "Kopiointi epäonnistui. Avaa linkit yksitellen.";
+      }
+    });
+
+    document.querySelector("#clear").addEventListener("click", () => {
+      input.value = "";
+      status.textContent = "";
+      render();
+      input.focus();
+    });
+
+    const initialQuery = new URLSearchParams(window.location.search).get("q");
+    if (initialQuery) input.value = initialQuery;
+    render();
+  </script>
+</body>
+</html>
