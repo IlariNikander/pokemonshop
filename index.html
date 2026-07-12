@@ -199,7 +199,7 @@
     <section class="panel">
       <h1>Pokémon-korttihaku</h1>
       <p class="intro">
-        Kirjoita kortin tunnus tai muu hakusana kerran. Alla olevat linkit päivittyvät automaattisesti neljään kauppaan.
+        Kirjoita kortin tunnus tai muu hakusana. Neljä kauppalinkkiä päivittyvät automaattisesti.
       </p>
 
       <label for="query">Hakusana</label>
@@ -207,7 +207,7 @@
         <input
           id="query"
           type="search"
-          value="s10b 030"
+          value=""
           placeholder="Esim. s10b 030"
           autocomplete="off"
           spellcheck="false"
@@ -216,12 +216,7 @@
         <button id="openAll" class="primary" type="button">Avaa kaikki</button>
       </div>
 
-      <div class="actions">
-        <button id="copyAll" class="secondary" type="button">Kopioi linkit</button>
-        <button id="clear" class="secondary" type="button">Tyhjennä</button>
-      </div>
-
-      <p class="hint">Vinkki: yksittäisen kaupan voi avata suoraan sen riviltä.</p>
+      <p class="hint">Avaa yksittäinen kauppa sen linkkiriviltä tai avaa kaikki neljä omiin välilehtiinsä.</p>
       <div id="status" aria-live="polite"></div>
 
       <div id="results" class="results"></div>
@@ -232,11 +227,11 @@
     const shops = [
       {
         name: "Toreca Camp",
-        makeUrl: q => `https://torecacamp-pokemon.com/search?type=product&options%5Bprefix%5D=last&options%5Bunavailable_products%5D=last&q=${q}`
+        makeUrl: q => `https://torecacamp-pokemon.com/search?sort_by=relevance&q=${q}&type=product&options%5Bprefix%5D=last&options%5Bunavailable_products%5D=last&filter.v.availability=1&filter.v.price.gte=&filter.v.price.lte=`
       },
       {
         name: "Hareruya 2",
-        makeUrl: q => `https://www.hareruya2.com/search?type=product&q=${q}&options%5Bprefix%5D=last`
+        makeUrl: q => `https://www.hareruya2.com/search?q=${q}&options%5Bprefix%5D=last&filter.v.availability=1&sort_by=price-ascending`
       },
       {
         name: "Card Rush Pokémon",
@@ -244,7 +239,7 @@
       },
       {
         name: "C-Labo Online",
-        makeUrl: q => `https://www.c-labo-online.jp/product-list?keyword=${q}&Submit=`
+        makeUrl: q => `https://www.c-labo-online.jp/product-list/0/0/photo?keyword=${q}&num=60&available=1&order=&main_category=&group=&Submit=1`
       }
     ];
 
@@ -285,7 +280,7 @@
         name.textContent = link.name;
 
         url.className = "store-url";
-        url.textContent = hasQuery ? link.url : "Kirjoita ensin hakusana";
+        url.textContent = hasQuery ? link.url : "Kirjoita hakusana";
 
         arrow.className = "arrow";
         arrow.textContent = "↗";
@@ -300,10 +295,7 @@
         return anchor;
       }));
 
-      const pageUrl = new URL(window.location.href);
-      if (hasQuery) pageUrl.searchParams.set("q", input.value.trim());
-      else pageUrl.searchParams.delete("q");
-      history.replaceState(null, "", pageUrl);
+      status.textContent = "";
     }
 
     input.addEventListener("input", render);
@@ -316,39 +308,12 @@
       }
 
       status.textContent = "";
+
       currentLinks().forEach(link => {
         window.open(link.url, "_blank", "noopener,noreferrer");
       });
     });
 
-    document.querySelector("#copyAll").addEventListener("click", async () => {
-      if (!input.value.trim()) {
-        status.textContent = "Kirjoita ensin hakusana.";
-        input.focus();
-        return;
-      }
-
-      const text = currentLinks()
-        .map(link => `${link.name}: ${link.url}`)
-        .join("\n");
-
-      try {
-        await navigator.clipboard.writeText(text);
-        status.textContent = "Linkit kopioitu leikepöydälle.";
-      } catch {
-        status.textContent = "Kopiointi epäonnistui. Avaa linkit yksitellen.";
-      }
-    });
-
-    document.querySelector("#clear").addEventListener("click", () => {
-      input.value = "";
-      status.textContent = "";
-      render();
-      input.focus();
-    });
-
-    const initialQuery = new URLSearchParams(window.location.search).get("q");
-    if (initialQuery) input.value = initialQuery;
     render();
   </script>
 </body>
